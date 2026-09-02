@@ -1,0 +1,17 @@
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Boxes, LockKeyhole } from 'lucide-react';
+import { Button } from '../components/ui/button';
+import { useAuth } from '../hooks/useAuth';
+import { ApiError } from '../services/api';
+
+export function LoginPage() {
+  const { login } = useAuth();
+  const navigate = useNavigate();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+  const submit = async (event: React.FormEvent) => { event.preventDefault(); setError(''); setLoading(true); try { await login(email, password); navigate('/dashboard', { replace: true }); } catch (cause) { setError(cause instanceof ApiError ? cause.message : 'Unable to sign in. Please try again.'); } finally { setLoading(false); } };
+  return <main className="grid min-h-screen bg-slate-50 lg:grid-cols-[1.1fr_.9fr]"><section className="hidden bg-slate-950 p-12 text-white lg:flex lg:flex-col"><div className="flex items-center gap-3"><div className="grid h-10 w-10 place-items-center rounded-lg bg-white/10"><Boxes className="h-5 w-5" /></div><div><p className="font-semibold">OpsFlow</p><p className="text-xs text-indigo-200/70">ERP &amp; CRM</p></div></div><div className="my-auto max-w-lg"><p className="mb-4 text-sm font-semibold uppercase tracking-[0.18em] text-indigo-200">Operations, made dependable</p><h1 className="text-4xl font-semibold leading-tight tracking-tight">A clearer way to run your customer and inventory operations.</h1><p className="mt-5 max-w-md text-base leading-7 text-slate-300">One focused workspace for customer relationships, warehouse stock, and sales dispatches.</p></div><p className="text-sm text-slate-400">Secure role-based access for your operations team.</p></section><section className="flex items-center justify-center p-6 sm:p-10"><div className="w-full max-w-md"><div className="mb-9 lg:hidden"><div className="mb-5 grid h-11 w-11 place-items-center rounded-lg bg-slate-950 text-white"><Boxes className="h-5 w-5" /></div><h1 className="text-2xl font-semibold text-ink">OpsFlow</h1><p className="mt-1 text-sm text-slate-500">ERP &amp; CRM Operations Portal</p></div><div className="surface p-6 sm:p-8"><div className="mb-7"><h2 className="text-xl font-semibold text-ink">Welcome back</h2><p className="mt-1.5 text-sm text-slate-500">Sign in to access your operations workspace.</p></div><form onSubmit={submit} className="space-y-5"><div><label className="field-label" htmlFor="email">Work email</label><input className="field-control" id="email" type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} required /></div><div><label className="field-label" htmlFor="password">Password</label><input className="field-control" id="password" type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} required /></div>{error && <p role="alert" className="rounded-lg bg-red-50 px-3 py-2.5 text-sm text-red-700">{error}</p>}<Button className="w-full" type="submit" loading={loading}>{loading ? 'Signing in…' : 'Sign in securely'}<LockKeyhole className="h-4 w-4" /></Button></form></div><p className="mt-5 text-center text-xs leading-5 text-slate-500">Authorised operations users only. Your session is protected with role-based access.</p></div></section></main>;
+}

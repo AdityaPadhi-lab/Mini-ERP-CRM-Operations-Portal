@@ -1,0 +1,25 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { ArrowLeft, CheckCircle2, Printer, XCircle } from 'lucide-react';
+import { Link, useParams } from 'react-router-dom';
+import { PageHeader } from '../components/PageHeader';
+import { Badge } from '../components/ui/badge';
+import { Button } from '../components/ui/button';
+import { ConfirmDialog } from '../components/ui/dialog';
+import { ErrorState, TableSkeleton } from '../components/ui/states';
+import { challanService } from '../services/challan.service';
+import { ApiError } from '../services/api';
+import { currency, date, dateTime } from '../lib/utils';
+import { useAuth } from '../hooks/useAuth';
+import { useState } from 'react';
+import { useToast } from '../components/ToastProvider';
+import type { ChallanStatus } from '../types';
+
+const tone: Record<ChallanStatus,'info'|'success'|'danger'> = { DRAFT:'info', CONFIRMED:'success', CANCELLED:'danger' };
+export function ChallanDetailPage(){
+ const {id=''}=useParams(); const {can}=useAuth(); const [confirm,setConfirm]=useState<'confirm'|'cancel'|null>(null); const client=useQueryClient(); const toast=useToast(); const q=useQuery({queryKey:['challan',id],queryFn:()=>challanService.get(id),enabled:Boolean(id)});
+ const action=useMutation({mutationFn:()=>confirm==='confirm'?challanService.confirm(id):challanService.cancel(id),onSuccess:()=>{client.invalidateQueries({queryKey:['challan',id]});client.invalidateQueries({queryKey:['challans']});client.invalidateQueries({queryKey:['dashboard']});client.invalidateQueries({queryKey:['products']});toast.success(confirm==='confirm'?'Challan confirmed and stock deducted':'Challan cancelled');setConfirm(null)},onError:e=>toast.error(e instanceof ApiError?e.message:'Action failed')});
+ if(q.isLoading)return <TableSkeleton rows={8}/>; if(q.isError||!q.data)return <ErrorState message="We couldn't load this challan." retry={()=>q.refetch()}/>; const c=q.data;
+ return <div className="print-document"><Link to="/challans" className="no-print mb-5 inline-flex items-center gap-1 text-sm font-semibold text-slate-500 hover:text-indigo-700"><ArrowLeft className="h-4 w-4"/>Back to challans</Link><PageHeader eyebrow="Dispatch document" title={c.challanNumber} description={`${c.customer.customerName} · ${c.customer.businessName}`} actions={<div className="no-print flex flex-wrap gap-2"><Button variant="secondary" onClick={()=>window.print()}><Printer className="h-4 w-4"/>Print</Button>{can('ADMIN','SALES')&&c.status==='DRAFT'&&<Button onClick={()=>setConfirm('confirm')}><CheckCircle2 className="h-4 w-4"/>Confirm</Button>}{can('ADMIN','SALES')&&c.status!=='CANCELLED'&&<Button variant="danger" onClick={()=>setConfirm('cancel')}><XCircle className="h-4 w-4"/>Cancel</Button>}</div>}/>
+ <section className="surface overflow-hidden"><div className="grid gap-6 border-b border-slate-100 p-6 sm:grid-cols-3"><div><p className="field-label">Status</p><Badge tone={tone[c.status]}>{c.status}</Badge></div><div><p className="field-label">Customer</p><p className="font-bold text-slate-800">{c.customer.customerName}</p><p className="text-xs text-slate-400">{c.customer.mobileNumber}</p></div><div><p className="field-label">Created</p><p className="font-semibold text-slate-700">{dateTime(c.createdAt)}</p><p className="text-xs text-slate-400">By {c.createdBy.name}</p></div></div><div className="table-wrap"><table className="data-table"><thead><tr><th>Item</th><th>SKU</th><th className="text-right">Unit price</th><th className="text-right">Quantity</th><th className="text-right">Line total</th></tr></thead><tbody>{c.items.map(i=><tr key={i.id}><td className="font-bold text-slate-800">{i.productNameSnapshot}</td><td className="text-slate-500">{i.skuSnapshot}</td><td className="text-right tabular-nums">{currency(i.unitPriceSnapshot)}</td><td className="text-right font-bold tabular-nums">{i.quantity}</td><td className="text-right font-bold tabular-nums">{currency(Number(i.unitPriceSnapshot)*i.quantity)}</td></tr>)}</tbody><tfoot><tr><td colSpan={3}/><td className="px-5 py-4 text-right text-xs font-bold uppercase tracking-wide text-slate-500">Total units</td><td className="px-5 py-4 text-right text-lg font-extrabold text-slate-900">{c.totalQuantity}</td></tr></tfoot></table></div><div className="grid gap-6 border-t border-slate-100 p-6 sm:grid-cols-2"><div><p className="field-label">Billing / delivery address</p><p className="text-sm leading-6 text-slate-600">{c.customer.address}</p></div><div><p className="field-label">GST number</p><p className="text-sm text-slate-600">{c.customer.gstNumber||'Not provided'}</p></div></div></section>
+ <ConfirmDialog open={confirm!==null} title={confirm==='confirm'?'Confirm this challan?':'Cancel this challan?'} description={confirm==='confirm'?'This will validate stock and deduct every item from inventory.':'A confirmed challan will restore its deducted stock when cancelled.'} confirmLabel={confirm==='confirm'?'Confirm dispatch':'Cancel challan'} tone={confirm==='confirm'?'primary':'danger'} loading={action.isPending} onCancel={()=>setConfirm(null)} onConfirm={()=>action.mutate()}/></div>;
+}

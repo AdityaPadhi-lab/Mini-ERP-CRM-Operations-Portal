@@ -1,0 +1,33 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@500;600;700;800&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  * { @apply border-slate-200; }
+  html { @apply bg-[#f7f8fb]; }
+  body { @apply m-0 min-w-[320px] bg-[#f7f8fb] text-sm text-slate-700 antialiased; font-family: 'DM Sans', ui-sans-serif, system-ui, sans-serif; }
+  h1,h2,h3,h4 { font-family: 'Manrope', 'DM Sans', sans-serif; }
+  button, input, select, textarea { font: inherit; }
+  button { @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2; }
+  a { @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2; }
+}
+
+@layer components {
+  .surface { @apply rounded-2xl border border-slate-200/80 bg-white shadow-[0_1px_2px_rgba(15,23,42,.03),0_10px_30px_rgba(15,23,42,.035)]; }
+  .field-label { @apply mb-1.5 block text-xs font-semibold uppercase tracking-wide text-slate-500; }
+  .field-control { @apply block h-10 w-full rounded-xl border border-slate-300 bg-white px-3 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10 disabled:cursor-not-allowed disabled:bg-slate-50 disabled:text-slate-400; }
+  .table-wrap { @apply overflow-x-auto; }
+  .data-table { @apply min-w-full border-separate border-spacing-0 text-left; }
+  .data-table th { @apply border-b border-slate-200 bg-slate-50/80 px-5 py-3 text-[11px] font-bold uppercase tracking-[.08em] text-slate-500; }
+  .data-table td { @apply border-b border-slate-100 px-5 py-3.5 align-middle text-sm; }
+  .data-table tbody tr { @apply transition-colors hover:bg-indigo-50/30; }
+  .metric-value { font-family: 'Manrope', sans-serif; }
+  .glass { @apply border border-white/20 bg-white/10 backdrop-blur-xl; }
+}
+
+@media print {
+  .no-print { display: none !important; }
+  .print-document { box-shadow: none !important; border: 0 !important; }
+  body { background: white !important; }
+}

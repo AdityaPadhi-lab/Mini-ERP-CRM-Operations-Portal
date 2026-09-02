@@ -1,0 +1,27 @@
+import cors from 'cors';
+import express from 'express';
+import helmet from 'helmet';
+import morgan from 'morgan';
+import { env } from './config/env.js';
+import { errorHandler, notFound } from './middleware/error.js';
+import { authRouter } from './routes/auth.routes.js';
+import { challanRouter } from './routes/challan.routes.js';
+import { customerRouter } from './routes/customer.routes.js';
+import { dashboardRouter } from './routes/dashboard.routes.js';
+import { inventoryRouter } from './routes/inventory.routes.js';
+import { productRouter } from './routes/product.routes.js';
+
+export const app = express();
+app.use(helmet());
+app.use(cors({ origin: env.clientUrl, credentials: false }));
+app.use(express.json({ limit: '1mb' }));
+app.use(morgan(env.nodeEnv === 'production' ? 'combined' : 'dev'));
+app.get('/health', (_req, res) => res.json({ success: true, data: { status: 'ok' } }));
+app.use('/api/auth', authRouter);
+app.use('/api/customers', customerRouter);
+app.use('/api/products', productRouter);
+app.use('/api/stock-movements', inventoryRouter);
+app.use('/api/challans', challanRouter);
+app.use('/api/dashboard', dashboardRouter);
+app.use(notFound);
+app.use(errorHandler);
